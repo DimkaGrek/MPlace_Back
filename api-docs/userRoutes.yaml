@@ -1,0 +1,411 @@
+paths:
+  /users/register:
+    post:
+      summary: Registers a new user
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - repassword
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+                repassword:
+                  type: string
+                  format: password
+                  description: repeat User's password
+      responses:
+        201:
+          description: The user is successfully registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: integer
+                    format: int64
+                    description: Unique user ID
+                  email:
+                    type: string
+                    format: email
+                    description: User's email
+        400:
+          description: Request failed due to incorrect input data
+        401:
+          description: User is not authorized
+        409:
+          description: This user already exists
+
+  /users/login:
+    post:
+      summary: User login
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+      responses:
+        200:
+          description: The user is successfully login
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserTokens"
+        404:
+          description: User with this email not found, Incorrect password, The user is not activated yet
+
+  /users/logout:
+    post:
+      summary: User logout
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  description: User's refreshToken
+      responses:
+        200:
+          description: The user is successfully logout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                refreshToken:
+                  type: string
+                  description: User's refreshToken
+        500:
+          description: Unexpected error
+
+  /users/restore:
+    post:
+      summary: Send email for new password
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email
+      responses:
+        200:
+          description: Email sent succesfully
+
+        404:
+          description: User with this email not found
+
+  /users/changepassword:
+    post:
+      summary: Change user password
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - restoreNumber
+                - password
+                - confirmPassword
+              properties:
+                restoreNumber:
+                  type: string
+                  description: Restore number from email
+                password:
+                  type: string
+                  description: New password
+                confirmPassword:
+                  type: string
+                  description: Confirm password
+      responses:
+        200:
+          description: Password change succesfully
+          content:
+            application/json:
+              schema:
+                user:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                      format: email
+                      description: User's email
+                    id:
+                      type: integer
+                      format: int64
+                      description: Unique user ID
+                    isActivated:
+                      type: boolean
+                      description: User account activation status
+                      default: false
+                    username:
+                      type: string
+                      nullable: true
+                      description: Username (can be null)
+        400:
+          description: Password and confirm password do not match
+        404:
+          description: Incorrect restore number
+
+  /users/activate/{link}:
+    get:
+      summary: Activation user
+      tags: [Users]
+      parameters:
+        - name: link
+          in: path
+          description: activation link from Email
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User activated successfully
+        400:
+          description: Incorrect activation link
+
+  /users/refresh:
+    get:
+      summary: Refresh token
+      tags: [Users]
+      responses:
+        200:
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserTokens"
+        401:
+          description: User is not authorized
+
+  /users/{userId}/profile:
+    post:
+      summary: Change user profile
+      tags: [Users]
+      parameters:
+        - name: userId
+          in: path
+          description: Unique user ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            description: Unique user ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              # required:
+              #   - email
+              #   - password
+              properties:
+                firstName:
+                  type: string
+                  description: User's first name
+                lastName:
+                  type: string
+                  description: User's last name
+                phone:
+                  type: string
+                  description: User's phone
+                messengers:
+                  type: array
+                  xml:
+                    wrapped: true
+                  items:
+                    properties:
+                      MessengerId:
+                        type: integer
+                        format: int64
+                        description: Unique messenger ID
+                      name:
+                        type: string
+                        description: Name of messenger
+      responses:
+        200:
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/Profile"
+        404:
+          description: User not found
+
+    get:
+      summary: Get user profile
+      tags: [Users]
+      parameters:
+        - name: userId
+          in: path
+          description: Unique user ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            description: Unique user ID
+      responses:
+        200:
+          description: operation successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/Profile"
+        404:
+          description: User not found
+
+  /users/auth/google:
+    get:
+      summary: Google authentication
+      tags: [Users]
+
+  /users/auth/linkedin:
+    get:
+      summary: LinkedIn authentication
+      tags: [Users]
+
+  /users/loginFromSocial:
+    post:
+      summary: Get user tokens and profile
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - info
+              properties:
+                userId:
+                  type: integer
+                  format: int64
+                  description: Unique user ID
+                info:
+                  type: string
+                  description: token
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserTokens"
+        404:
+          description: User not found
+
+# components
+components:
+  schemas:
+    Profile:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: Unique user ID
+        firstName:
+          type: string
+          description: User's first name
+        lastName:
+          type: string
+          description: User's last name
+        phone:
+          type: string
+          description: User's phone
+        messengers:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: "#/components/schemas/Messenger"
+
+    UserTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token containing information about the user and its validity period
+        refreshToken:
+          type: string
+          description: JWT token to update the accessToken when it expires
+        user:
+          type: object
+          properties:
+            email:
+              type: string
+              format: email
+              description: User's email
+            id:
+              type: integer
+              format: int64
+              description: Unique user ID
+            isActivated:
+              type: boolean
+              description: User account activation status
+              default: false
+            username:
+              type: string
+              nullable: true
+              description: Username (can be null)
+
+    Messenger:
+      type: object
+      properties:
+        MessengerId:
+          type: integer
+          format: int64
+          description: Unique messenger ID
+        name:
+          type: string
+          description: Name of messenger

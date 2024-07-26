@@ -1,0 +1,58 @@
+paths:
+  /messengers:
+    post:
+      summary: Add new messenger
+      tags: [Messengers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - messenger
+              properties:
+                messenger:
+                  type: string
+                  example: "Telegram"
+                  description: Messenger's name
+      responses:
+        201:
+          description: Messenger added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  MessengerId:
+                    type: integer
+                    description: Unique messenger id
+                  name:
+                    type: string
+                    description: Messenger's name
+    get:
+      summary: Get list of messengers
+      tags: [Messengers]
+      responses:
+        200:
+          description: success operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Messenger"
+
+components:
+  schemas:
+    Messenger:
+      type: object
+      properties:
+        MessengerId:
+          type: integer
+          example: 1
+          description: Unique messenger id
+        name:
+          type: string
+          example: Telegram
+          description: Messenger's name
